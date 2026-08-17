@@ -4,11 +4,11 @@ import { Menu, X, GraduationCap } from "lucide-react";
 import { useAuth } from "@context/AuthContext";
 import ROUTES from "@constants/routes";
 import {
-    TEACHER_SIDEBAR_MENU,
-    TEACHER_SIDEBAR_FOOTER_MENU,
+    SCHOOL_SIDEBAR_MENU,
+    SCHOOL_SIDEBAR_FOOTER_MENU,
     LOGOUT_ITEM,
-} from "@/Admin_panel/constants/teacherSidebarConfig";
-import LogoutDialog from "@/Admin_panel/components/teacher/common/LogoutDialog";
+} from "@school-admin/constants/schoolSidebarConfig";
+import LogoutDialog from "@school-admin/components/LogoutDialog";
 
 function SidebarLink({ item }) {
     return (
@@ -47,11 +47,7 @@ function SidebarLink({ item }) {
     );
 }
 
-export function TeacherSidebar({
-    className = "",
-    onNavigate,
-    labelId = "teacher-sidebar-title",
-}) {
+export function Sidebar() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -65,7 +61,7 @@ export function TeacherSidebar({
     const handleConfirmLogout = () => {
         setLogoutOpen(false);
         logout();
-        navigate(ROUTES.TEACHER_LOGIN, { replace: true });
+        navigate(ROUTES.SCHOOL_ADMIN_LOGIN, { replace: true });
     };
 
     return (
@@ -90,7 +86,6 @@ export function TeacherSidebar({
                 className={[
                     "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--border-default)] bg-[var(--bg-surface)] transition-transform duration-300 ease-in-out",
                     mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                    className,
                 ].join(" ")}
             >
                 <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-[var(--border-default)] px-4">
@@ -103,7 +98,7 @@ export function TeacherSidebar({
                                 SpeakMate AI
                             </p>
                             <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                                Teacher Workspace
+                                School Admin
                             </p>
                         </div>
                     </div>
@@ -120,11 +115,11 @@ export function TeacherSidebar({
 
                 <div className="no-scrollbar flex-1 overflow-y-auto">
                     <nav className="flex flex-col gap-0.5 px-3 py-3">
-                        {TEACHER_SIDEBAR_MENU.map((item) => (
+                        {SCHOOL_SIDEBAR_MENU.map((item) => (
                             <SidebarLink key={item.id} item={item} />
                         ))}
 
-                        {TEACHER_SIDEBAR_FOOTER_MENU.map((item) => (
+                        {SCHOOL_SIDEBAR_FOOTER_MENU.map((item) => (
                             <SidebarLink key={item.id} item={item} />
                         ))}
 
@@ -149,4 +144,4 @@ export function TeacherSidebar({
     );
 }
 
-export default TeacherSidebar;
+export default Sidebar;

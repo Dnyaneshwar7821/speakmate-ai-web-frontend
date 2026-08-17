@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import ROUTES from "@constants/routes";
 
-import TeacherHeader from "./TeacherHeader";
+import TeacherNavbar from "./TeacherNavbar";
 import TeacherSidebar from "./TeacherSidebar";
 
 const teacherScrollPositions = new Map();
@@ -46,23 +46,23 @@ function TeacherBreadcrumbs({ pathname }) {
 
     return (
         <nav aria-label="Breadcrumb" className="mb-5 overflow-x-auto sm:mb-6">
-            <ol className="flex min-w-max items-center gap-2 text-sm font-semibold text-slate-500">
+            <ol className="flex min-w-max items-center gap-2 text-sm font-semibold text-[var(--text-muted)]">
                 {breadcrumbs.map((item, index) => {
                     const isCurrent = index === breadcrumbs.length - 1;
 
                     return (
                         <li key={item.label} className="flex items-center gap-2">
                             {index > 0 && (
-                                <span aria-hidden="true" className="text-slate-300">/</span>
+                                <span aria-hidden="true" className="text-[var(--border-default)]">/</span>
                             )}
                             {isCurrent ? (
-                                <span aria-current="page" className="text-slate-700">
+                                <span aria-current="page" className="text-[var(--text-primary)]">
                                     {item.label}
                                 </span>
                             ) : (
                                 <Link
                                     to={item.path}
-                                    className="rounded-sm transition-colors hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                    className="rounded-sm transition-colors hover:text-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                                 >
                                     {item.label}
                                 </Link>
@@ -145,7 +145,7 @@ export function TeacherDashboardLayout({ children }) {
 
     return (
         <MotionConfig reducedMotion="user">
-            <div className="flex min-h-screen bg-slate-50 text-slate-950">
+            <div className="flex min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
                 <TeacherSidebar
                     className="fixed inset-y-0 left-0 z-30 hidden lg:flex"
                     labelId="teacher-desktop-sidebar-title"
@@ -156,7 +156,7 @@ export function TeacherDashboardLayout({ children }) {
                         <div className="fixed inset-0 z-50 lg:hidden">
                             <motion.div
                                 aria-hidden="true"
-                                className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -183,7 +183,7 @@ export function TeacherDashboardLayout({ children }) {
                                     ref={closeButtonRef}
                                     type="button"
                                     onClick={closeSidebar}
-                                    className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                    className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl text-[var(--text-secondary)] transition-colors duration-200 hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
                                     aria-label="Close teacher workspace menu"
                                 >
                                     <svg
@@ -203,14 +203,10 @@ export function TeacherDashboardLayout({ children }) {
                     )}
                 </AnimatePresence>
 
-                <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-72">
-                    <TeacherHeader
-                        onMenuOpen={() => setIsSidebarOpen(true)}
-                        menuButtonRef={menuButtonRef}
-                        isMenuOpen={isSidebarOpen}
-                    />
+                <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-64">
+                    <TeacherNavbar />
                     <main className="flex-1">
-                        <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+                        <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
                             <TeacherBreadcrumbs pathname={location.pathname} />
                             {children}
                         </div>
