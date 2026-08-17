@@ -6,6 +6,29 @@ import AuthLayout from "../components/layout/AuthLayout";
 
 import ROUTES from "../constants/routes";
 
+import AdminLogin from "@/Admin_panel/pages/AdminLogin";
+import AdminForgotPassword from "@/Admin_panel/pages/AdminForgotPassword";
+import AdminOtpVerification from "@/Admin_panel/pages/AdminOtpVerification";
+import AdminResetPassword from "@/Admin_panel/pages/AdminResetPassword";
+import SchoolAdminLogin from "@/Admin_panel/pages/SchoolAdminLogin";
+import SchoolAdminForgotPassword from "@/Admin_panel/pages/SchoolAdminForgotPassword";
+import SchoolAdminOtpVerification from "@/Admin_panel/pages/SchoolAdminOtpVerification";
+import SchoolAdminResetPassword from "@/Admin_panel/pages/SchoolAdminResetPassword";
+import TeacherLogin from "@/Admin_panel/pages/TeacherLogin";
+import TeacherForgotPassword from "@/Admin_panel/pages/TeacherForgotPassword";
+import TeacherOtpVerification from "@/Admin_panel/pages/TeacherOtpVerification";
+import TeacherResetPassword from "@/Admin_panel/pages/TeacherResetPassword";
+import TeacherDashboardHome from "@/Admin_panel/pages/TeacherDashboardHome";
+import TeacherStudents from "@/Admin_panel/pages/TeacherStudents";
+import TeacherStudentDetails from "@/Admin_panel/pages/TeacherStudentDetails";
+import TeacherAnalytics from "@/Admin_panel/pages/TeacherAnalytics";
+import TeacherReports from "@/Admin_panel/pages/TeacherReports";
+import TeacherProfile from "@/Admin_panel/pages/TeacherProfile";
+import AdminDashboard from "@/Admin_panel/pages/AdminDashboard";
+import TeacherDashboardLayout from "@/Admin_panel/components/teacher/layout/TeacherDashboardLayout";
+import AdminProtectedRoute from "@/Admin_panel/routes/AdminProtectedRoute";
+import { ADMIN_ROLES } from "@/Admin_panel/constants/adminRoles";
+
 import LandingPage from "../pages/LandingPage";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -329,6 +352,107 @@ export function AppRoutes() {
             }
           />
         </Route>
+
+        {/* Role-based administration authentication */}
+        {[
+          [ROUTES.ADMIN_LOGIN, AdminLogin],
+          [ROUTES.ADMIN_FORGOT_PASSWORD, AdminForgotPassword],
+          [ROUTES.ADMIN_VERIFY_OTP, AdminOtpVerification],
+          [ROUTES.ADMIN_RESET_PASSWORD, AdminResetPassword],
+          [ROUTES.SCHOOL_ADMIN_LOGIN, SchoolAdminLogin],
+          [ROUTES.SCHOOL_ADMIN_FORGOT_PASSWORD, SchoolAdminForgotPassword],
+          [ROUTES.SCHOOL_ADMIN_VERIFY_OTP, SchoolAdminOtpVerification],
+          [ROUTES.SCHOOL_ADMIN_RESET_PASSWORD, SchoolAdminResetPassword],
+          [ROUTES.TEACHER_LOGIN, TeacherLogin],
+          [ROUTES.TEACHER_FORGOT_PASSWORD, TeacherForgotPassword],
+          [ROUTES.TEACHER_VERIFY_OTP, TeacherOtpVerification],
+          [ROUTES.TEACHER_RESET_PASSWORD, TeacherResetPassword],
+        ].map(([path, AuthPage]) => (
+          <Route key={path} path={path} element={<PageTransition><AuthPage /></PageTransition>} />
+        ))}
+
+        {[
+          [ROUTES.ADMIN_DASHBOARD, ADMIN_ROLES.SUPER_ADMIN],
+          [ROUTES.SCHOOL_ADMIN_DASHBOARD, ADMIN_ROLES.SCHOOL_ADMIN],
+        ].map(([path, role]) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <PageTransition>
+                <AdminProtectedRoute requiredRole={role}>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
+              </PageTransition>
+            }
+          />
+        ))}
+
+        <Route
+          path={ROUTES.TEACHER_DASHBOARD}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherDashboardHome />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.TEACHER_STUDENTS}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherStudents />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.TEACHER_STUDENT_DETAILS}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherStudentDetails />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.TEACHER_ANALYTICS}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherAnalytics />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.TEACHER_REPORTS}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherReports />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.TEACHER_PROFILE}
+          element={
+            <AdminProtectedRoute requiredRole={ADMIN_ROLES.TEACHER}>
+              <TeacherDashboardLayout>
+                <TeacherProfile />
+              </TeacherDashboardLayout>
+            </AdminProtectedRoute>
+          }
+        />
 
         {/* 404 Fallback */}
         <Route

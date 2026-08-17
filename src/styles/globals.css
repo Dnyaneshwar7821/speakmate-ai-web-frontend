@@ -54,8 +54,24 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
+}
+
+.admin-auth-input[type="email"]:-webkit-autofill,
+.admin-auth-input[type="email"]:-webkit-autofill:hover,
+.admin-auth-input[type="email"]:-webkit-autofill:focus,
+.admin-auth-input[type="email"]:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  caret-color: #0f172a;
+  transition: background-color 9999s ease-out 0s;
 }
 
 /* Custom Scrollbar */
@@ -63,13 +79,16 @@ h1, h2, h3, h4, h5, h6 {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(108, 99, 255, 0.25);
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(108, 99, 255, 0.5);
 }
@@ -91,8 +110,15 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Pulse Wave Animation */
 @keyframes soundwave {
-  0%, 100% { height: 6px; }
-  50% { height: 28px; }
+
+  0%,
+  100% {
+    height: 6px;
+  }
+
+  50% {
+    height: 28px;
+  }
 }
 
 .animate-wave-bar {
