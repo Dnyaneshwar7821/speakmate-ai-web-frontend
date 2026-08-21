@@ -64,11 +64,14 @@ export function ConversationSession() {
   const scenario = searchParams.get("scenario") || location.state?.scenarioTitle || "Free Speaking Practice";
   const xpReward = Number(searchParams.get("xpReward")) || 20;
 
-  const initialGreeting = location.state?.scenarioDesc
-    ? `Hello! Welcome to '${scenario}'. ${location.state.scenarioDesc} Let's practice speaking together!`
-    : `Hello! I am your SpeakMate AI Coach for '${scenario}'. Let's practice speaking together!`;
+  const passedGreeting = location.state?.initialGreeting;
+  const cleanScn = (scenario || "").replace(/\b(conversation|practice|session)\b/gi, "").trim();
+  const scnLabel = cleanScn ? `${cleanScn} ` : "";
+  const initialGreeting = passedGreeting || (location.state?.scenarioDesc
+    ? `Hello! Welcome to our ${scnLabel}practice. ${location.state.scenarioDesc} Let's get started!`
+    : `Hello! Welcome to our ${scnLabel}conversation practice. How can I help you today?`);
 
-  const [sessionId] = useState(sessionIdParam || Date.now().toString());
+  const [sessionId, setSessionId] = useState(sessionIdParam || location.state?.sessionId || null);
   const [messages, setMessages] = useState([
     {
       id: "1",
@@ -86,6 +89,22 @@ export function ConversationSession() {
   const [isListening, setIsListening] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+
+  // Initialize speaking session with backend if not already provided
+  useEffect(() => {
+    if (!sessionId && !sessionIdParam) {
+      speakingService.start({ scenario, level: chatLevel })
+        .then((res) => {
+          if (res?.id) {
+            setSessionId(res.id);
+          }
+        })
+        .catch((err) => {
+          console.warn("Could not create remote speaking session, using local simulation:", err);
+          setSessionId(`sim_${Date.now()}`);
+        });
+    }
+  }, [sessionId, sessionIdParam, scenario, chatLevel]);
 
   // Avatar Model State & Hooks
   const [model, setModel] = useState(null);
@@ -134,33 +153,15 @@ export function ConversationSession() {
 
   const getSpeakableText = (feedback) => {
     if (!feedback) return "";
-    let text = cleanDialogueText(feedback.aiReply || feedback.message || "");
-    const isCorrect =
-      feedback.grammarCorrection &&
-      (feedback.grammarCorrection.includes("✅") ||
-        feedback.grammarCorrection.toLowerCase().includes("correct"));
-
-    if (feedback.grammarCorrection && !isCorrect && !feedback.grammarCorrection.includes("|")) {
-      const cleanCorrection = cleanDialogueText(feedback.grammarCorrection);
-      if (cleanCorrection) {
-        text += `. A better way to say that is: "${cleanCorrection}".`;
-      }
-      if (feedback.explanation && !feedback.explanation.includes("|")) {
-        const cleanExpl = cleanDialogueText(feedback.explanation);
-        if (cleanExpl) text += ` ${cleanExpl}`;
-      }
-    } else if (feedback.betterSentence && !feedback.betterSentence.includes("|")) {
-      const cleanBetter = cleanDialogueText(feedback.betterSentence);
-      if (cleanBetter) {
-        text += `. You could also express it as: "${cleanBetter}".`;
+    let text = feedback.aiReply || feedback.message || feedback.response || "";
+    if (text.includes("Analyze User Input:") || text.includes("Context:") || text.includes("Requirements:")) {
+      const idx = text.lastIndexOf("\n\n");
+      if (idx !== -1 && idx < text.length - 1) {
+        text = text.substring(idx).trim();
       }
     }
-
-    if (feedback.followUpQuestion && !feedback.followUpQuestion.includes("|")) {
-      const cleanFollow = cleanDialogueText(feedback.followUpQuestion);
-      if (cleanFollow && !text.includes(cleanFollow)) {
-        text += ` ${cleanFollow}`;
-      }
+    if (feedback.followUpQuestion && !text.toLowerCase().includes(feedback.followUpQuestion.toLowerCase())) {
+      text += ` ${feedback.followUpQuestion}`;
     }
     return cleanDialogueText(text);
   };
@@ -183,16 +184,21 @@ export function ConversationSession() {
     });
   };
 
+  // Speak initial greeting reliably on mount
   useEffect(() => {
+    let active = true;
     warmupSpeechAutoplay();
-    if (messages.length > 0) {
-      const initialText = getSpeakableText(messages[0]);
-      const timerId = setTimeout(() => {
-        handleSpeakText(initialText || messages[0].message);
-      }, 400);
-      return () => clearTimeout(timerId);
-    }
-  }, [sessionId]);
+    const timerId = setTimeout(() => {
+      if (active && initialGreeting) {
+        handleSpeakText(initialGreeting);
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timerId);
+    };
+  }, [initialGreeting]);
 
   useEffect(() => {
     let interval = null;
@@ -268,7 +274,7 @@ export function ConversationSession() {
       setHints(data || []);
     } catch (e) {
       console.warn("Failed to fetch hints:", e);
-    } fontFinally: {
+    } finally {
       setLoadingHints(false);
     }
   };
@@ -322,28 +328,35 @@ export function ConversationSession() {
 
     try {
       let feedback = null;
-      try {
-        feedback = await speakingService.sendMessage({
-          sessionId,
-          message: text,
-          level: chatLevel,
-        });
-      } catch (err) {
-        // Fallback to AI service endpoint
+      if (sessionId && !String(sessionId).startsWith("sim_")) {
         try {
-          const aiFeedback = await aiService.speakingFeedback(text);
-          if (aiFeedback && (aiFeedback.aiReply || aiFeedback.feedback || aiFeedback.response)) {
+          feedback = await speakingService.sendMessage({
+            sessionId,
+            message: text,
+            level: chatLevel,
+          });
+        } catch (err) {
+          console.warn("Backend speaking message error:", err);
+        }
+      }
+
+      // If backend was not reached or returned null/error, try conversational AI chat endpoint
+      if (!feedback) {
+        try {
+          const aiChatRes = await aiService.chat(`You are an English conversation tutor in scenario '${scenario}'. The learner said: "${text}". Reply naturally in 1-2 engaging sentences and ask a relevant question.`);
+          if (aiChatRes && (aiChatRes.response || aiChatRes.message)) {
+            const rawMsg = aiChatRes.response || aiChatRes.message;
             feedback = {
-              aiReply: aiFeedback.aiReply || aiFeedback.response || aiFeedback.feedback,
-              grammarCorrection: aiFeedback.grammarCorrection || "✅ Correct phrasing.",
-              betterSentence: aiFeedback.betterSentence || null,
-              vocabularySuggestions: aiFeedback.vocabularySuggestions || null,
-              explanation: aiFeedback.explanation || null,
-              followUpQuestion: aiFeedback.followUpQuestion || null,
+              aiReply: cleanDialogueText(rawMsg),
+              grammarCorrection: "✅ Grammatically correct.",
+              betterSentence: null,
+              vocabularySuggestions: null,
+              explanation: null,
+              followUpQuestion: null,
             };
           }
         } catch (e2) {
-          // Intelligently generate dynamic response locally so it never repeats the same static string!
+          // Dynamic offline conversation engine fallback
           feedback = generateDynamicCoachingResponse(text, scenario, messages);
         }
       }
